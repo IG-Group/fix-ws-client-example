@@ -7,7 +7,7 @@ import SymbolList from '../symbol-list';
 import OrderService from "../../services/order-service";
 import ExecutionReportService from '../../services/execution-report-service';
 import PositionReportService from '../../services/position-report-service';
-import { Quotes, ChartContainer, Orders, Reports, MessagePerformanceMetrics } from '../trade';
+import { Quotes, ChartContainer, Orders, Reports } from '../trade';
 import '../../styles/pre-trade.css';
 
 const DEFAULT_SYMBOL_SUBSCRIPTIONS = [
@@ -207,7 +207,6 @@ export default function Trade({ quoteMessage, tradeMessage, preTradeService, tra
             <SymbolList service={preTradeService} selectedSymbols={subscribedQuotes} securityList={securityList} onSecurityItemSelected={handleQuoteSelection}/>
           </Col>
           <Col md="9" lg="9">
-            <MessagePerformanceMetrics quoteMessage={quoteMessage}/>
             <Quotes
               quotes={quotesArr}
               securityId={securityId}
