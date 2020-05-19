@@ -68,7 +68,7 @@ export default function Trade({ quoteMessage, tradeMessage, preTradeService, tra
 
   useEffect(() => {
     const setSecurityIdSymbol = (message) => {
-      if (securityList.length > 0) {
+      if (securityList.length > 0 && message.SecurityID) {
       const { Symbol } = securityList.find(s => s.SecurityID === message.SecurityID);
         message.SecurityIdSymbol = Symbol;
         return message;
@@ -91,7 +91,7 @@ export default function Trade({ quoteMessage, tradeMessage, preTradeService, tra
 
   useEffect(() => {
     const setSecurityIdSymbol = (message) => {
-      if (securityList.length > 0) {
+      if (securityList.length > 0 && message.SecurityID) {
       const { Symbol } = securityList.find(s => s.SecurityID === message.SecurityID);
         message.SecurityIdSymbol = Symbol;
         return message;

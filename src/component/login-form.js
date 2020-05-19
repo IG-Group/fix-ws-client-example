@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
 import InputField from './ui/input-field';
-import {FormSelect} from 'shards-react';
+import {FormSelect, Container, Row, Col, Button} from 'shards-react';
 import { AUTH_TYPE } from './pages/login';
+import OAuth2Redirect from './oauth2-redirect';
 
 export function UserForm({ identifier, password, accountId, onIdentifierChanged, onPasswordChanged, onAccountIdChanged }) {
   return (
@@ -65,4 +66,25 @@ export function EnvironmentForm({ onEnvChange }) {
       }
     </div>
   );
+}
+
+export function LoginButtons({ onClick }) {
+  return (
+    <Container>
+      <Row>
+        <Col>
+          <Button className="login-button" theme="secondary" onClick={() => onClick()}>Login</Button>
+        </Col>
+        <Col>
+          <OAuth2Redirect
+            oauthProviderUrl={''}
+            redirectUri={''}
+            clientId={''}
+            state={''}
+            scope={''}
+          />
+        </Col>
+      </Row>
+    </Container>
+  )
 }
