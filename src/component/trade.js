@@ -5,7 +5,6 @@ import Charts from './charts';
 import Order from './order';
 import { WorkingOrders } from './working-orders';
 import Positions from './positions';
-import PerformanceMetrics from '../performance-metrics';
 
 export function Quotes({ quotes, securityId, selectedClass, onDirectionClick }) {
   return (
@@ -93,15 +92,5 @@ export function Reports({ workingOrders, positions, replacedOrder, onCancelOrder
         </Col>
       </Row>
     </div>
-  )
-}
-
-export function MessagePerformanceMetrics({ quoteMessage }) {
-  return (
-    <Row>
-      <Col>
-        <PerformanceMetrics quoteMessage={quoteMessage}/>
-      </Col>
-    </Row>
   )
 }
