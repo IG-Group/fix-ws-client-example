@@ -76,11 +76,12 @@ export default function Login({preTradeService, tradeService, authService, messa
         default:
       }
     } else if (!isConnected) {
-      if (authService) {
+      if (authService && oauth2Service) {
         authService.stopTokenRefresh();
+        oauth2Service.stopTokenRefresh();
       }
     }
-  }, [preTradeService, tradeService, authService, message, isConnected, accountId, onLoginSuccessful]);
+  }, [preTradeService, tradeService, authService, message, isConnected, accountId, onLoginSuccessful, oauth2Service]);
 
   useEffect(() => {
     if (isLoginSuccessful) {
@@ -125,7 +126,6 @@ export default function Login({preTradeService, tradeService, authService, messa
 
   return (
     <div className="login-container">
-      {token} - {code}
       <Row>
         <Col></Col>
         <Col>
