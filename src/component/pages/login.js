@@ -5,6 +5,7 @@ import {useHistory, useLocation} from 'react-router-dom';
 import '../../styles/login.css';
 import {WEBSOCKET_SOURCE} from "../../services/websocket-connection";
 import {UserForm, AuthTypeForm, EnvironmentForm, LoginButtons} from '../login-form';
+import OAuth2Service from '../../services/oauth2-service';
 
 export const AUTH_TYPE = {
   OAUTH: 'oauth',
@@ -28,17 +29,32 @@ export default function Login({preTradeService, tradeService, authService, messa
   const history = useHistory();
   const location = useLocation();
   const queryParams = useQuery();
+  const [ oauth2Service ] = useState(new OAuth2Service());
   const code = queryParams.get('code');
+  const token = oauth2Service.getAccessToken();
+  const [ isLoggedIn, setIsLoggedIn ] = useState(false);
 
   useEffect(() => {
-    if (code) {
-      console.log(code);
+    if (oauth2Service && queryParams) {
+      setIsLoggedIn(code || token);
     }
-  }, [code]);
+  }, [token, code, oauth2Service, queryParams]);
+
+  useEffect(() => {
+    if (code && oauth2Service && preTradeService && tradeService && isConnected) {
+      oauth2Service.getOAuthToken(code);
+    }
+  }, [code, oauth2Service, preTradeService, tradeService, isConnected]);
+
+  useEffect(() => {
+    if (!code && oauth2Service && preTradeService && tradeService && isConnected) {
+      oauth2Service.getRefreshToken();
+    }
+  }, [code, oauth2Service, preTradeService, tradeService, isConnected]);
 
   useEffect(() => {
     const {MessageType, Source} = message;
-    if (preTradeService && tradeService && MessageType && Source && accountId) {
+    if (preTradeService && tradeService && MessageType && Source) {
       let service;
       if (Source === WEBSOCKET_SOURCE.PRE_TRADE) {
         service = preTradeService;
@@ -74,14 +90,19 @@ export default function Login({preTradeService, tradeService, authService, messa
   }, [isLoginSuccessful, history, location]);
 
   async function handleNegotiate() {
-    if (preTradeService && identifier && password && accountId) {
-      try {
-        setError('');
-        let token = await fetchToken();
-        preTradeService.sendNegotiate(uuidv1(), authType, token);
-        tradeService.sendNegotiate(uuidv1(), authType, token);
-      } catch ({response: {data: {errorCode}}}) {
-        AUTH_ERRORS[errorCode] ? setError(AUTH_ERRORS[errorCode]) : setError(errorCode);
+    if (token) {
+      preTradeService.sendNegotiate(uuidv1(), AUTH_TYPE.OAUTH, oauth2Service.getAccessToken());
+      tradeService.sendNegotiate(uuidv1(), AUTH_TYPE.OAUTH, oauth2Service.getAccessToken());
+    } else {
+      if (preTradeService && identifier && password && accountId) {
+        try {
+          setError('');
+          let token = await fetchToken();
+          preTradeService.sendNegotiate(uuidv1(), authType, token);
+          tradeService.sendNegotiate(uuidv1(), authType, token);
+        } catch ({response: {data: {errorCode}}}) {
+          AUTH_ERRORS[errorCode] ? setError(AUTH_ERRORS[errorCode]) : setError(errorCode);
+        }
       }
     }
   }
@@ -104,6 +125,7 @@ export default function Login({preTradeService, tradeService, authService, messa
 
   return (
     <div className="login-container">
+      {token} - {code}
       <Row>
         <Col></Col>
         <Col>
@@ -115,6 +137,7 @@ export default function Login({preTradeService, tradeService, authService, messa
                   identifier={identifier}
                   password={password}
                   accountId={accountId}
+                  showOnlyAccountId={isLoggedIn}
                   onIdentifierChanged={(id) => setIdentifier(id)}
                   onPasswordChanged={(pass) => setPassword(pass)}
                   onAccountIdChanged={(accountId) => setAccountId(accountId)}
@@ -127,6 +150,7 @@ export default function Login({preTradeService, tradeService, authService, messa
                 />
                 <LoginButtons
                   onClick={handleNegotiate}
+                  isLoggedIn={isLoggedIn}
                 />
               </FormGroup>
             </Form>

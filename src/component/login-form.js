@@ -2,27 +2,31 @@ import React, {useState} from 'react';
 import InputField from './ui/input-field';
 import {FormSelect, Container, Row, Col, Button} from 'shards-react';
 import { AUTH_TYPE } from './pages/login';
-import OAuth2Redirect from './oauth2-redirect';
+import OAuthButton from './oauth2-button';
 
-export function UserForm({ identifier, password, accountId, onIdentifierChanged, onPasswordChanged, onAccountIdChanged }) {
+export function UserForm({ identifier, password, accountId, showOnlyAccountId, onIdentifierChanged, onPasswordChanged, onAccountIdChanged }) {
   return (
     <div className="user-form">
-      <InputField
-        autoComplete="on"
-        value={identifier}
-        labelName={"Username"}
-        id="username"
-        type="text"
-        onChange={(e) => onIdentifierChanged(e.target.value)}
-        onInput={(e) => onIdentifierChanged(e.target.value)}/>
-      <InputField
-        autoComplete="on"
-        value={password}
-        labelName={"Password"}
-        id="password"
-        type="password"
-        onChange={(e) => onPasswordChanged(e.target.value)}
-        onInput={(e) => onPasswordChanged(e.target.value)}/>
+      {!showOnlyAccountId &&
+      <div>
+        <InputField
+          autoComplete="on"
+          value={identifier}
+          labelName={"Username"}
+          id="username"
+          type="text"
+          onChange={(e) => onIdentifierChanged(e.target.value)}
+          onInput={(e) => onIdentifierChanged(e.target.value)}/>
+        <InputField
+          autoComplete="on"
+          value={password}
+          labelName={"Password"}
+          id="password"
+          type="password"
+          onChange={(e) => onPasswordChanged(e.target.value)}
+          onInput={(e) => onPasswordChanged(e.target.value)}/>
+      </div>
+      }
       <InputField
         autoComplete="on"
         value={accountId}
@@ -68,23 +72,24 @@ export function EnvironmentForm({ onEnvChange }) {
   );
 }
 
-export function LoginButtons({ onClick }) {
+export function LoginButtons({ onClick, isLoggedIn = false }) {
   return (
-    <Container>
-      <Row>
-        <Col>
-          <Button className="login-button" theme="secondary" onClick={() => onClick()}>Login</Button>
-        </Col>
-        <Col>
-          <OAuth2Redirect
-            oauthProviderUrl={''}
-            redirectUri={''}
-            clientId={''}
-            state={''}
-            scope={''}
-          />
-        </Col>
-      </Row>
-    </Container>
+    <div>
+      <Container>
+        <Row>
+          <Col>
+            <Button className="login-button" theme="secondary" onClick={() => onClick()}>Login</Button>
+          </Col>
+          <Col>
+            {!isLoggedIn &&
+            <OAuthButton
+              oauthProviderUrl={`${process.env.REACT_APP_OAUTH2_URL}/authorize`}
+              redirectUri={'http://localhost:3000/login'}
+            />
+            }
+          </Col>
+        </Row>
+      </Container>
+    </div>
   )
 }
