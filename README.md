@@ -2,21 +2,20 @@
 
 ### Setting Environment
 
-In order to use OAuth, you will need an application key from [IG Labs](https://labs.ig.com/gettingstarted)
+#### OAuth2 Service
+Please see [vendor example](https://github.com/IG-Group/ig-oauth-api-example)
+for an example OAuth2 service that this example will use for authentication.
 
 Define these variables in an `.env` file
 ```
 # IG OAUTH 
-# Remove "demo-" for prod authentication
-REACT_APP_OAUTH_URL=https://demo-api.ig.com/gateway/deal/session
-REACT_APP_OAUTH_REFRESH_URL=https://demo-api.ig.com/gateway/deal/session/refresh-token
-REACT_APP_OAUTH_APP_KEY=[IG API KEY]
+# This should be your server endpoint that makes request to IG's OAuth2 Service
+REACT_APP_OAUTH2_URL=[OAUTH2 URL]
 
 # IG FIX WEBSOCKET
-REACT_APP_PRE_TRADE_WEBSOCKET_URL=[IG WEBSOCKET URL]  see table below for environment URLS
-REACT_APP_TRADE_WEBSOCKET_URL=[IG WEBSOCKET URL]  see table below for environment URLS
+REACT_APP_PRE_TRADE_WEBSOCKET_URL=[IG WEBSOCKET URL]
+REACT_APP_TRADE_WEBSOCKET_URL=[IG WEBSOCKET URL]
 REACT_APP_CLIENT_HEARTBEAT=30000
-
 ```
 
 ### Running Application
