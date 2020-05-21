@@ -35,20 +35,18 @@ export default function Login({preTradeService, tradeService, authService, messa
   const [ isLoggedIn, setIsLoggedIn ] = useState(false);
 
   useEffect(() => {
-    if (oauth2Service && queryParams) {
-      setIsLoggedIn(code || token);
-    }
-  }, [token, code, oauth2Service, queryParams]);
-
-  useEffect(() => {
     if (code && oauth2Service && preTradeService && tradeService && isConnected) {
-      oauth2Service.getOAuthToken(code);
+      oauth2Service.getOAuthToken(code)
+        .then(() => setIsLoggedIn(true))
+        .catch(() => setIsLoggedIn(false));
     }
   }, [code, oauth2Service, preTradeService, tradeService, isConnected]);
 
   useEffect(() => {
     if (!code && oauth2Service && preTradeService && tradeService && isConnected) {
-      oauth2Service.getRefreshToken();
+      oauth2Service.getRefreshToken()
+        .then(() => setIsLoggedIn(true))
+        .catch(() => setIsLoggedIn(false));
     }
   }, [code, oauth2Service, preTradeService, tradeService, isConnected]);
 

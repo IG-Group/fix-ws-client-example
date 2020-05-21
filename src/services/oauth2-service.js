@@ -19,16 +19,24 @@ export default class OAuth2Service {
   }
 
   async getRefreshToken(expires_in) {
-    if (!this.timeoutId) {
-      this.timeoutId = setTimeout(async () => {
-        const response = await this.client.get('/refresh');
-        const { data: { access_token, expires_in } } = response;
-        this.accessToken = access_token;
-        clearTimeout(this.timeoutId);
-        this.timeoutId = null;
-        this.getRefreshToken(this._toMilliseconds(expires_in));
-      }, expires_in);
+    if (!expires_in) {
+        return await this.fetchNewToken();
+    } else {
+      if (!this.timeoutId) {
+        this.timeoutId = setTimeout(async () => {
+          await this.fetchNewToken();
+        }, expires_in);
+      }
     }
+  }
+
+  async fetchNewToken() {
+    const response = await this.client.get('/refresh');
+    const { data: { access_token, expires_in } } = response;
+    this.accessToken = access_token;
+    clearTimeout(this.timeoutId);
+    this.timeoutId = null;
+    this.getRefreshToken(this._toMilliseconds(expires_in));
   }
 
   stopTokenRefresh() {
