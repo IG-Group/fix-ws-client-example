@@ -9,7 +9,6 @@ export default class OAuth2Service {
 
   async getOAuthToken(code) {
     const response = await this.client.post('/token', { code });
-    console.log(response);
     if (response.data) {
       const { access_token, expires_in } = response.data;
       this.accessToken = access_token;
