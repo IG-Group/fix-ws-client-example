@@ -1,10 +1,11 @@
 import React, {useState, useEffect} from 'react';
 import uuidv1 from 'uuid/v1';
-import {Row, Col, FormGroup, Form, Button} from 'shards-react';
+import {Row, Col, FormGroup, Form} from 'shards-react';
 import {useHistory, useLocation} from 'react-router-dom';
 import '../../styles/login.css';
 import {WEBSOCKET_SOURCE} from "../../services/websocket-connection";
-import {UserForm, AuthTypeForm, EnvironmentForm} from '../login-form';
+import {UserForm, AuthTypeForm, EnvironmentForm, LoginButtons} from '../login-form';
+import OAuth2Service from '../../services/oauth2-service';
 
 export const AUTH_TYPE = {
   OAUTH: 'oauth',
@@ -15,6 +16,10 @@ const AUTH_ERRORS = {
   "error.security.invalid-details": "Username or password is incorrect"
 };
 
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
+
 export default function Login({preTradeService, tradeService, authService, message, onLoginSuccessful, isLoginSuccessful, onWebsocketEnvChanged, isConnected}) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -23,10 +28,31 @@ export default function Login({preTradeService, tradeService, authService, messa
   const [error, setError] = useState('');
   const history = useHistory();
   const location = useLocation();
+  const queryParams = useQuery();
+  const [ oauth2Service ] = useState(new OAuth2Service());
+  const code = queryParams.get('code');
+  const token = oauth2Service.getAccessToken();
+  const [ isLoggedIn, setIsLoggedIn ] = useState(false);
+
+  useEffect(() => {
+    if (code && oauth2Service && preTradeService && tradeService && isConnected) {
+      oauth2Service.getOAuthToken(code)
+        .then(() => setIsLoggedIn(true))
+        .catch(() => setIsLoggedIn(false));
+    }
+  }, [code, oauth2Service, preTradeService, tradeService, isConnected]);
+
+  useEffect(() => {
+    if (!code && oauth2Service && preTradeService && tradeService && isConnected) {
+      oauth2Service.getRefreshToken()
+        .then(() => setIsLoggedIn(true))
+        .catch(() => setIsLoggedIn(false));
+    }
+  }, [code, oauth2Service, preTradeService, tradeService, isConnected]);
 
   useEffect(() => {
     const {MessageType, Source} = message;
-    if (preTradeService && tradeService && MessageType && Source && accountId) {
+    if (preTradeService && tradeService && MessageType && Source) {
       let service;
       if (Source === WEBSOCKET_SOURCE.PRE_TRADE) {
         service = preTradeService;
@@ -48,11 +74,12 @@ export default function Login({preTradeService, tradeService, authService, messa
         default:
       }
     } else if (!isConnected) {
-      if (authService) {
+      if (authService && oauth2Service) {
         authService.stopTokenRefresh();
+        oauth2Service.stopTokenRefresh();
       }
     }
-  }, [preTradeService, tradeService, authService, message, isConnected, accountId, onLoginSuccessful]);
+  }, [preTradeService, tradeService, authService, message, isConnected, accountId, onLoginSuccessful, oauth2Service]);
 
   useEffect(() => {
     if (isLoginSuccessful) {
@@ -62,20 +89,36 @@ export default function Login({preTradeService, tradeService, authService, messa
   }, [isLoginSuccessful, history, location]);
 
   async function handleNegotiate() {
-    if (preTradeService) {
-      try {
-        setError('');
-        let token = null;
-        if (authType === AUTH_TYPE.CREDENTIALS) {
-          token = `${identifier}:${password}`;
-        } else {
-          token = await authService.getOAuthToken(identifier, password);
+    if (token) {
+      preTradeService.sendNegotiate(uuidv1(), AUTH_TYPE.OAUTH, oauth2Service.getAccessToken());
+      tradeService.sendNegotiate(uuidv1(), AUTH_TYPE.OAUTH, oauth2Service.getAccessToken());
+    } else {
+      if (preTradeService && identifier && password && accountId) {
+        try {
+          setError('');
+          let token = await fetchToken();
+          preTradeService.sendNegotiate(uuidv1(), authType, token);
+          tradeService.sendNegotiate(uuidv1(), authType, token);
+        } catch ({response: {data: {errorCode}}}) {
+          AUTH_ERRORS[errorCode] ? setError(AUTH_ERRORS[errorCode]) : setError(errorCode);
         }
-        preTradeService.sendNegotiate(uuidv1(), authType, token);
-        tradeService.sendNegotiate(uuidv1(), authType, token);
-      } catch ({response: {data: {errorCode}}}) {
-        AUTH_ERRORS[errorCode] ? setError(AUTH_ERRORS[errorCode]) : setError(errorCode);
       }
+    }
+  }
+
+  async function fetchToken() {
+    try {
+      setError('');
+      let token = null;
+      if (authType === AUTH_TYPE.CREDENTIALS) {
+        token = `${identifier}:${password}`;
+      } else {
+        token = await authService.getOAuthToken(identifier, password);
+      }
+
+      return token;
+    } catch ({response: {data: {errorCode}}}) {
+      AUTH_ERRORS[errorCode] ? setError(AUTH_ERRORS[errorCode]) : setError(errorCode);
     }
   }
 
@@ -92,6 +135,7 @@ export default function Login({preTradeService, tradeService, authService, messa
                   identifier={identifier}
                   password={password}
                   accountId={accountId}
+                  showOnlyAccountId={isLoggedIn}
                   onIdentifierChanged={(id) => setIdentifier(id)}
                   onPasswordChanged={(pass) => setPassword(pass)}
                   onAccountIdChanged={(accountId) => setAccountId(accountId)}
@@ -102,7 +146,10 @@ export default function Login({preTradeService, tradeService, authService, messa
                 <EnvironmentForm
                   onEnvChange={(env) => onWebsocketEnvChanged(env)}
                 />
-                <Button className="login-button" theme="secondary" onClick={handleNegotiate}>Login</Button>
+                <LoginButtons
+                  onClick={handleNegotiate}
+                  isLoggedIn={isLoggedIn}
+                />
               </FormGroup>
             </Form>
           </div>
