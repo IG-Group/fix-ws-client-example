@@ -11,6 +11,7 @@ Define these variables in an `.env` file
 # IG OAUTH 
 # This should be your server endpoint that makes request to IG's OAuth2 Service
 REACT_APP_OAUTH2_URL=[OAUTH2 URL]
+REACT_APP_OAUTH2_REDIRECT=[OAUTH2 REDIRECT URL]
 
 # IG FIX WEBSOCKET
 REACT_APP_PRE_TRADE_WEBSOCKET_URL=[IG WEBSOCKET URL]

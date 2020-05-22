@@ -84,7 +84,7 @@ export function LoginButtons({ onClick, isLoggedIn = false }) {
             {!isLoggedIn &&
             <OAuthButton
               oauthProviderUrl={`${process.env.REACT_APP_OAUTH2_URL}/authorize`}
-              redirectUri={'http://localhost:3000/login'}
+              redirectUri={process.env.REACT_APP_OAUTH2_REDIRECT}
             />
             }
           </Col>
